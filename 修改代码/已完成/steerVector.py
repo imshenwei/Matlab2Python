@@ -10,8 +10,8 @@ def steerVector(plane_distance, frequencies, scan_limits, grid_resolution, mic_p
     N_freqs = max(frequencies.shape);#N_freqs = length(frequencies);
 
     # 定义扫描平面  #纯粹range是对象, list应该是对的, 还有+1是因为matlab转换
-    x = list(range(scan_limits[0],scan_limits[1]+1,grid_resolution))# x = scan_limits(1):grid_resolution:scan_limits(2); 
-    y = list(range(scan_limits[2],scan_limits[3]+1,grid_resolution)); # y = scan_limits(3):grid_resolution:scan_limits(4); 
+    x = list(range(scan_limits[0],scan_limits[1]+grid_resolution,grid_resolution))# x = scan_limits(1):grid_resolution:scan_limits(2); 
+    y = list(range(scan_limits[2],scan_limits[3]+grid_resolution,grid_resolution)); # y = scan_limits(3):grid_resolution:scan_limits(4); 
     z = plane_distance# z = plane_distance;
     N_X = max(x); N_Y = max(y)# N_X = length(x); N_Y = length(y);
     X = np.tile(x,N_X,1), Y = np.tile(np.transpose(y),1,N_Y)   # X = repmat(x,N_X,1); Y = repmat(y.',1,N_Y)  #.'转置 ,  repmat可能有误

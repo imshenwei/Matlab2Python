@@ -10,8 +10,8 @@ def  DAS(CSM, g, frequencies, scan_limits, grid_resolution):
     N_freqs = len(frequencies[0])#N_freqs = length(frequencies);
 
     # 扫描平面
-    X = list(range(scan_limits[0],scan_limits[1]+1,grid_resolution))#X = scan_limits(1):grid_resolution:scan_limits(2);
-    Y = list(range(scan_limits[2],scan_limits[3]+1,grid_resolution))#Y = scan_limits(3):grid_resolution:scan_limits(4);
+    X = list(range(scan_limits[0],scan_limits[1]+grid_resolution,grid_resolution))#X = scan_limits(1):grid_resolution:scan_limits(2);
+    Y = list(range(scan_limits[2],scan_limits[3]+grid_resolution,grid_resolution))#Y = scan_limits(3):grid_resolution:scan_limits(4);
     N_X = len(X[0]); N_Y = len(Y[0]); N_mic = size(g,2)#N_X = length(X); N_Y = length(Y); N_mic = size(g,3);
 
     # 变量初始化

@@ -14,18 +14,13 @@ import time
 class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self):
         super(mywindow, self).__init__()
-        self.cap_im = 'XMU2.png'
 
         # UI
         self.setupUi(self)
         self.move_center()
 
-        # camera
-        self.CAM_NUM = 0
-        self.cap = cv2.VideoCapture()  # 初始化摄像头
-        self.open_flag = self.cap.open(self.CAM_NUM)  # 摄像头: True打开, False关闭
-        if self.open_flag is False:
-            print('Please check camera!')
+        # open camera
+        self.open_camera()
 
         # B1槽连接 pushButton
         self.pushButton.setText('Algorithm Start')
@@ -73,6 +68,13 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def closeWindow(self):
         self.close()
 
+    def open_camera(self):
+        self.CAM_NUM = 0
+        self.cap = cv2.VideoCapture()  # 初始化摄像头
+        self.open_flag = self.cap.open(self.CAM_NUM)  # 摄像头: True打开, False关闭
+        if self.open_flag is False:
+            print('Please check camera!')
+
     def camera_switch(self):
         if self.open_flag:  # 关闭
             self.DSP_A()
@@ -108,8 +110,7 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def DSP_A(self):
 
-        # SPL data
-        SPL = np.load('testSPL.npy')
+        SPL = np.load('testSPL.npy')  # SPL data
         maxSPL = ceil(np.max(SPL))
         minSPL = floor(np.min(SPL))
         print([maxSPL, minSPL])
@@ -118,6 +119,7 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
         time1 = 0
         time2 = 0
         time3 = 0
+
         self.ret, self.frame = self.cap.read()
         image_height, image_width, image_depth = self.frame.shape
         pic3 = np.array(np.zeros((image_height, image_width, 3)))
@@ -142,7 +144,7 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
                           interpolation=cv2.INTER_AREA)
 
         end2 = time.time_ns()
-        pic3[:, :, 0] = pic2  # RGB
+        pic3[:, :, 0] = pic2  # RGB通道
 
         self.hit_img = cv2.add(uint8(pic3), uint8(self.frame))
         end3 = time.time_ns()

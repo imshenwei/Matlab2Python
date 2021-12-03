@@ -41,7 +41,7 @@ fs = 8000  # fs = 8000;
 
 # % 导入麦克风阵列  %注:绘制麦克风阵列
 # load 56_spiral_array.mat
-path_full = 'C:/Users/Admin/Desktop/桌面整理/资料/Gitee备份/computer-backup/XQ3.1/专业/实验/实验3/原始代码/延迟求和算法的Demo/56_spiral_array.mat'  # 须要读取的mat文件路径
+path_full = '修改代码/resources/56_spiral_array.mat'  # 须要读取的mat文件路径
 darray = h5py.File(path_full)
 array = darray['array'][:].T
 mic_x_axis = array[:, 0]

@@ -1,19 +1,30 @@
 digraph function{
     label="用户看到的功能"
-    start[shape=circle]
-    1[label="展示窗口+开启摄像头",shape=rec]
-    2[label="用户点击开启算法",shape=rec]
-    3[label="算法叠加在图象上",shape=rec]
-    4[label="用户关闭算法",shape=rec]
-    5[label="测试",shape=rec, style=dashed,fillcolor=red,]
+    start[shape=circle,color=red,fontcolor=red]
+    1[label="展示窗口+开启摄像头",shape=rec,color=red,fontcolor=red]
+    2[label="用户点击开启算法",shape=rec,color=red,fontcolor=red]
+    3[label="算法结果叠加原始几何图形",shape=rec,color=red,fontcolor=red]
+    4[label="用户关闭算法",shape=rec,color=red,fontcolor=red]
+    5[label="采集噪声信息",shape=rec, style=dashed,color=green,fontcolor=green]
+    6[label="选定扫描平,并构建网格",shape=rec, style=dashed,color=green,fontcolor=green]
+    7[label="波束成形分析",shape=rec, style=dashed,color=green,fontcolor=green]
+    8[label="将噪声热点信息还原到平面上",shape=rec, style=dashed,color=green,fontcolor=green]
+    9[label="频谱转换噪声矩阵,获得其频谱特性矩阵P(f)",shape=rec, style=dashed]
+    10[label="互谱运算",shape=rec, style=dashed]
+    11[label="扫描平面的每一个网格点作为假想声源",shape=rec, style=dashed]
+    12[label="计算麦克风点接收到的声音信号(声源建模公式)",shape=rec, style=dashed]
+    13[label="将实测结果和假想结果进行匹配度分析",shape=rec, style=dashed]
+    14[label="求其自谱",shape=rec, style=dashed]
+    15[label="匹配度最高者即为声源位置",shape=rec, style=dashed]
+    //7[label="可判断噪声源的分布",shape=rec, style=dashed]
     //example[label="window",shape=rec]
     //example[label="window",shape=rec]
-    //example[label="window",shape=rec]
-
-    start:s->1:n
-    1:s->2:n
-    2:s->3:n
-    3:s->4:n
+    //line[splines=ortho,weight=2]
+    start->1->2->3->4[weight=999]
+    2->5->6->7->8->3 [weight=99]
+    7->9->10->13
+    7->11->12->13
+    13->14->15->8
     
 
 }

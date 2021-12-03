@@ -1,0 +1,20 @@
+digraph demo{
+    //example[label="window",shape=rec]
+    start[shape=circle]
+    1[label="app = QApplication(sys.argv)",shape=rec]
+    2[label="window = mywindow()",shape=rec]
+    3[label="window.show()",shape=rec]
+    paintEvent[label="paintEvent",shape=rec]
+    4[label="sys.exit(app.exec_())",shape=rec]
+    //example[label="window",shape=rec]
+    //example[label="window",shape=rec]
+    //example[label="window",shape=rec]
+    //example[label="window",shape=rec]
+
+    start->1
+    1->2
+    2->3
+    3->paintEvent
+    paintEvent->4
+    4->paintEvent[label="if sys not end"]
+}

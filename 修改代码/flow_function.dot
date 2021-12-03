@@ -1,0 +1,19 @@
+digraph function{
+    label="用户看到的功能"
+    start[shape=circle]
+    1[label="展示窗口+开启摄像头",shape=rec]
+    2[label="用户点击开启算法",shape=rec]
+    3[label="算法叠加在图象上",shape=rec]
+    4[label="用户关闭算法",shape=rec]
+    5[label="测试",shape=rec, style=dashed,fillcolor=red,]
+    //example[label="window",shape=rec]
+    //example[label="window",shape=rec]
+    //example[label="window",shape=rec]
+
+    start:s->1:n
+    1:s->2:n
+    2:s->3:n
+    3:s->4:n
+    
+
+}

@@ -1,0 +1,7 @@
+{
+    "python.analysis.extraPaths": [
+        "C:/Users/Admin/AppData/Local/Programs/Python/Python39/Lib/site-packages/pyaudio.py",
+        "./1_hidden",
+        "./preprocess"
+    ]
+}

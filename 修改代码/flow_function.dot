@@ -1,4 +1,4 @@
-digraph function{
+digraph function{ 
     label="用户看到的功能"
     start[shape=circle,color=red,fontcolor=red]
     1[label="展示窗口+开启摄像头",shape=rec,color=red,fontcolor=red]

@@ -20,11 +20,20 @@ def DAS(CSM, g, frequencies, scan_limits, grid_resolution):
     N_mic = np.size(g, 2)
 
     # 变量初始化
-    B = np.zeros(((N_X, N_Y)), dtype=np.complex128)  # B = zeros(N_X,N_Y);
-    # B_freqK = zeros(N_X,N_Y);
-    B_freqK = np.zeros((N_X, N_Y), dtype=np.complex128)
 
     # 计算波束形成的声功率图
+    # B = old_func(CSM, g, N_freqs, N_X, N_Y, N_mic)
+
+    B = new_func_(CSM, g, N_freqs, N_X, N_Y, N_mic)
+
+    return [X, Y, B]
+
+
+def old_func(CSM, g, N_freqs, N_X, N_Y, N_mic):
+    # B = zeros(N_X,N_Y);
+    B = np.zeros(((N_X, N_Y)), dtype=np.complex128)
+    # B_freqK = zeros(N_X,N_Y);
+    B_freqK = np.zeros((N_X, N_Y), dtype=np.complex128)
     for K in range(1, N_freqs+1):  # for K = 1:N_freqs
         # 频率 K 对应的转向矢量
         gk = g[:, :, :, K-1]  # gk = g(:,:,:,K);
@@ -38,4 +47,26 @@ def DAS(CSM, g, frequencies, scan_limits, grid_resolution):
                                            CSM[:, :, K-1]), gk_xy)/(N_mic**2)
         # 累加各个频率成分
         B = B + B_freqK
-    return [X, Y, B]
+    return B
+
+
+def new_func_(CSM, g, N_freqs, N_X, N_Y, N_mic):
+    # B = zeros(N_X,N_Y);
+    B = np.zeros(((1, N_X*N_Y)), dtype=np.complex128)
+    # B_freqK = zeros(N_X,N_Y);
+    B_freqK = np.zeros((N_X, N_Y), dtype=np.complex128)
+    wk_reshape = np.zeros((N_mic, N_X*N_Y, N_freqs), dtype=np.complex128)
+
+    for K in range(1, N_freqs+1):  # = 1:N_freqs
+        # wk_reshape(:,:,:,K) = reshape(w(:,:,:,K),[], N_mic).'
+        wk_reshape[:, :, K-1] = g[:, :, :, K -
+                                  1].reshape(-1, N_mic, order='F').copy().T
+        # wk_reshape[:, :, K-1] = np.reshape(g[:, :, :, K-1], (-1, N_mic)).T
+    wk_reshape_conj = np.conj(wk_reshape)
+
+    for K in range(1, N_freqs+1):  # = 1:N_freqs
+        B_freqK = (wk_reshape_conj[:, :, K-1]*(CSM[:, :, K-1]
+                   @ wk_reshape[:, :, K-1])).sum(axis=0)/N_mic**2
+        B = B + B_freqK
+    B = B.reshape(N_X, N_Y, order='F').copy()
+    return B

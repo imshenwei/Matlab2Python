@@ -7,8 +7,10 @@ from numpy import *  # noqa
 
 
 def developCSM(mic_signal, freq_l, freq_u, Fs, t_start, t_end):
-    # 生成互谱矩阵 CSM
+    '''生成互谱矩阵 CSM'''
 
+    # % 计算CSM以及确定扫描频率  %注:计算转向矢量steerVector和波束成像 -- DAS算法DAS
+    # [CSM, freqs] = developCSM(mic_signal.', search_freql, search_frequ, framerate, t_start, t_end);
     # 麦克风阵列数
     N_mic = size(mic_signal, 1)
     # 开始和结束的样本点
@@ -26,7 +28,6 @@ def developCSM(mic_signal, freq_l, freq_u, Fs, t_start, t_end):
     # 初始化互谱矩阵CSM
     CSM = np.array(np.zeros((N_mic, N_mic, N_freqs)), dtype=complex)
     # 对采集到的时域数据进行傅里叶变换
-
     mic_signal_fft = sqrt(2) * \
         np.fft.fft(mic_signal[np.arange(
             start_sample-1, (end_samples + 1)-1, 1, dtype=int), :].T)/(end_samples-start_sample+1)  # mic_signal_fft = sqrt(2)*fft(mic_signal(start_sample:end_samples,:))/(end_samples-start_sample+1);

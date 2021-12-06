@@ -9,6 +9,7 @@ import cv2
 import numpy as np
 from numpy import *  # noqa
 import time
+from Beamforming_DAS_demo import beamforming as DAS_Algorithm
 
 
 class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -37,10 +38,11 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if self.open_flag:
             _, frame = self.cap.read()  # * 读取摄像头当前帧frame和布尔值_
             # 查看cv2.resize:https://blog.csdn.net/qwert15135156501/article/details/104534131
-            # *基于局部像素的重采样
+            # *基于局部像素的重采样g
             # todo 后期根据调试改变长和宽
             frame = cv2.resize(frame, (640, 480), interpolation=cv2.INTER_AREA)
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # BGR2RGB
+            frame = self.testDAS(frame)
             # 创建QImage的对象
             # setpixel, 调色盘setcolor https://blog.csdn.net/seniorwizard/article/details/111309598
             self.Qframe = QImage(
@@ -150,6 +152,46 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
         end3 = time.time_ns()
         cv2.imwrite("XMU2.jpg", self.hit_img)
         # cv2.imshow("frame", self.hit_img)
+
+    def testDAS(self, frame):
+        self.frame = frame
+        DAS_Algorithm()
+        SPL = np.load('testSPL.npy')  # SPL data
+        maxSPL = ceil(np.max(SPL))
+        minSPL = floor(np.min(SPL))
+        print([maxSPL, minSPL])
+
+        count = 0
+        time1 = 0
+        time2 = 0
+        time3 = 0
+        image_height, image_width, image_depth = self.frame.shape
+        pic3 = np.array(np.zeros((image_height, image_width, 3)))
+        pic1 = np.array(np.zeros((61, 61)))  # 81
+        color1 = [0, 255, 200, 100, 50]
+        start = time.time_ns()
+
+        # self.frame = self.frame[:, 80:560, :]
+        end1 = time.time_ns()
+
+        pic1[np.where(SPL > maxSPL-1)] = color1[1]
+        pic1[np.where(SPL > maxSPL-2)
+             and np.where(SPL <= maxSPL-1)] = color1[2]
+        pic1[np.where(SPL > maxSPL-3)
+             and np.where(SPL <= maxSPL-2)] = color1[3]
+        pic1[np.where(SPL > maxSPL-4)
+             and np.where(SPL <= maxSPL-3)] = color1[4]
+        pic1[np.where(SPL <= maxSPL-4)] = color1[0]
+
+        # pic2=np.kron(pic1[0:80,0:80],np.ones((6,6)))
+        pic2 = cv2.resize(pic1, (image_width, image_height),
+                          interpolation=cv2.INTER_AREA)
+
+        end2 = time.time_ns()
+        pic3[:, :, 0] = pic2  # RGB通道
+
+        self.hit_img = cv2.add(uint8(pic3), uint8(self.frame))
+        return self.hit_img
 
 
 if __name__ == '__main__':

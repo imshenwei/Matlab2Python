@@ -3,10 +3,12 @@ import math
 
 
 def steerVector(plane_distance, frequencies, scan_limits, grid_resolution, mic_positions, c, mic_centre):
-    #
+    '''计算转向矢量'''
     # ------ 计算导向矢量
     #
 
+    # %  %注:波束成像 -- DAS算法DAS
+    # g = steerVector(z_source, freqs, [scan_x scan_y], scan_resolution, mic_pos.', c, mic_centre);
     # 麦克风个数和扫描频点个数
     N_mic = mic_positions.shape[1]  # N_mic = size(mic_positions, 2);
     N_freqs = max(frequencies.shape)  # N_freqs = length(frequencies)

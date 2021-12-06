@@ -4,13 +4,12 @@ import math
 
 
 def simulateArraydata(source_info, mic_info, c, fs, duration, mic_centre):
-    #
-    # 生成麦克风阵列采集的时域数据
+    # 生成麦克风域阵列采集的时数据
     #
 
     # 声源和麦克风传感器的个数
-    N_source = np.size(source_info, 0)  # N_source = size(source_info, 1);
-    N_mic = np.size(mic_info, 0)  # N_mic = size(mic_info, 1);
+    N_source = np.size(source_info, 0)  # 声源的数量
+    N_mic = np.size(mic_info, 0)  # 麦克风传感器的数量
 
     # 计算样本点个数（分帧）
     # t = 0:1/fs:(duration-1/fs);
@@ -18,7 +17,6 @@ def simulateArraydata(source_info, mic_info, c, fs, duration, mic_centre):
     N_samples = max(t.shape)  # N_samples = length(t);
 
     # 麦克风阵列采集数据的初始化
-    # mic_signal = zeros(N_mic, N_samples)
     mic_signal = np.zeros((N_mic, N_samples))
     # 对每个声源累加声音信号（不相干声源假设）
     for I_I in range(1, N_source+1):
@@ -33,10 +31,6 @@ def simulateArraydata(source_info, mic_info, c, fs, duration, mic_centre):
                 mic_info[J-1, :] - source_info[I_I-1, 0:3], mic_info[J-1, :] - source_info[I_I-1, 0:3]))
             # 生成第 J 个麦克风采集的信号
             delay_time = (r_source_to_mic-r_source_to_centre)/c  # 延迟时间
-            # A=math.sqrt(2)
-            # D=source_info[I-1, 3]*(t-delay_time)
-            # B=np.cos(2*math.pi*source_info[I-1, 3]*(t-delay_time))
-            # C=mic_signal[J-1, :]
             mic_signal[J-1, :] = mic_signal[J-1, :] + math.sqrt(2)*amp*np.cos(
                 2*math.pi*source_info[I_I-1, 3]*(t-delay_time))*r_source_to_centre/r_source_to_mic
     return mic_signal

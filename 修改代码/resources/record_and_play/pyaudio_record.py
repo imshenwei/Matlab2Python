@@ -19,8 +19,8 @@ def save_wav_2and8():
     CHANNELS = 2
     RATE = 44100
     RECORD_SECONDS = 0.02
-    WAVE_OUTPUT_FILENAME = r"C:\Users\Admin\Desktop\桌面整理\资料\Gitee备份\computer-backup\XQ3.1\专业\实验\实验3 matlab2python\Matlab2Python\修改代码\resources\output.wav"
-
+    # WAVE_OUTPUT_FILENAME = r"C:\Users\Admin\Desktop\桌面整理\资料\Gitee备份\computer-backup\XQ3.1\专业\实验\实验3 matlab2python\Matlab2Python\修改代码\resources\output.wav"
+    WAVE_OUTPUT_FILENAME = "修改代码/resources/output.wav"
     p = pyaudio.PyAudio()
 
     stream = p.open(format=FORMAT,

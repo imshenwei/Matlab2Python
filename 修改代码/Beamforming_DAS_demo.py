@@ -75,10 +75,6 @@ def TrackAlignment(data):
     return y2
 
 
-def get_MicSignal():
-    return
-
-
 def beamforming():
     # ------ DAS 波束成像算法（扫频模式）Delay Summation Algorithm
     # ------ 可以设置多个不同频率、不同声压级的点声源
@@ -103,16 +99,17 @@ def beamforming():
     #  信号的采样频率
     # 引用: https://www.cnblogs.com/xingshansi/p/6799994.html
 
-    try:
-        save_wav_only8()
-    except:
-        save_wav_2and8()
+    save_wav_only8()
+    # try:
+    #     save_wav_only8()
+    # except:
+    #     save_wav_2and8()
     wav_path = "修改代码/resources/output.wav"
     framerate, nframes, mic_signal = get_micSignal_from_wav(wav_path)
 
     # 导入麦克风阵列
     path_full = '修改代码/resources/6_spiral_array.mat'  # 须要读取的mat文件路径
-    path_full = '修改代码/resources/2_spiral_array.mat'
+    # path_full = '修改代码/resources/2_spiral_array.mat'
     mic_pos, mic_centre, mic_x_axis, mic_y_axis = get_micArray(path_full)
 
     # draw_mic_array(mic_x_axis, mic_y_axis)

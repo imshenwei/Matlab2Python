@@ -11,7 +11,7 @@ def save_wav_only8():
     RESPEAKER_INDEX = 2  # refer to input device id
     CHUNK = 1024
     RECORD_SECONDS = 0.02
-    WAVE_OUTPUT_FILENAME = "output.wav"
+    WAVE_OUTPUT_FILENAME = "修改代码/resources/output.wav"
 
     p = pyaudio.PyAudio()  # set up the portaudio system.
 

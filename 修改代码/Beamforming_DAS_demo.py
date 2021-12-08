@@ -10,7 +10,8 @@ from preprocess.simulateArraydata import simulateArraydata
 import wave
 import scipy.io as scio
 import time
-from resources.record_and_play.record import save_wav
+from resources.record_and_play.record import save_wav_only8
+from resources.record_and_play.pyaudio_record import save_wav_2and8
 
 
 def simulateMicsignal():
@@ -102,7 +103,10 @@ def beamforming():
     #  信号的采样频率
     # 引用: https://www.cnblogs.com/xingshansi/p/6799994.html
 
-    save_wav()
+    try:
+        save_wav_only8()
+    except:
+        save_wav_2and8()
     wav_path = "修改代码/resources/output.wav"
     framerate, nframes, mic_signal = get_micSignal_from_wav(wav_path)
 

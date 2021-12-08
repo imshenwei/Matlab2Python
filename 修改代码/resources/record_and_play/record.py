@@ -1,8 +1,9 @@
+'''只能8通道使用'''
 import pyaudio
 import wave
 
 
-def save_wav():
+def save_wav_only8():
     RESPEAKER_RATE = 16000  # up to 48k
     RESPEAKER_CHANNELS = 8
     RESPEAKER_WIDTH = 2

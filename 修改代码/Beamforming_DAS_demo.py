@@ -112,6 +112,7 @@ def beamforming():
 
     # 导入麦克风阵列
     path_full = '修改代码/resources/6_spiral_array.mat'  # 须要读取的mat文件路径
+    path_full = '修改代码/resources/2_spiral_array.mat'
     mic_pos, mic_centre, mic_x_axis, mic_y_axis = get_micArray(path_full)
 
     # draw_mic_array(mic_x_axis, mic_y_axis)

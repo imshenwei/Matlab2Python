@@ -10,6 +10,7 @@ from preprocess.simulateArraydata import simulateArraydata
 import wave
 import scipy.io as scio
 import time
+from resources.record_and_play.record import save_wav
 
 
 def simulateMicsignal():
@@ -76,8 +77,6 @@ def TrackAlignment(data):
 def get_MicSignal():
     return
 
-def save_wav():
-    return
 
 def beamforming():
     # ------ DAS 波束成像算法（扫频模式）Delay Summation Algorithm
@@ -103,7 +102,7 @@ def beamforming():
     #  信号的采样频率
     # 引用: https://www.cnblogs.com/xingshansi/p/6799994.html
 
-    # save_wav()
+    save_wav()
     wav_path = "修改代码/resources/output.wav"
     framerate, nframes, mic_signal = get_micSignal_from_wav(wav_path)
 

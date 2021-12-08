@@ -13,6 +13,7 @@ import time
 
 
 def simulateMicsignal():
+    '''构建虚拟声源点'''
     # % 构建声源点  %注:设定信号持续时间和整合声源信息：source_info
     source_x = np.array([-1, 0.5]).reshape(1, -1).T  # source_x = [-1,0.5]';
     source_y = np.array([0, 1]).reshape(1, -1).T  # source_y = [0,1]';
@@ -55,7 +56,7 @@ def simulateMicsignal():
 
 
 def TrackAlignment(data):
-    '''hello'''
+    '''裁切'''
     y = data.T
     s_x = np.argsort(np.max(y, axis=0))
     y2 = []
@@ -71,9 +72,12 @@ def TrackAlignment(data):
         y2 = y[:, 1:7]
     return y2
 
-def get_MicSignal():
-    return 
 
+def get_MicSignal():
+    return
+
+def save_wav():
+    return
 
 def beamforming():
     # ------ DAS 波束成像算法（扫频模式）Delay Summation Algorithm
@@ -83,19 +87,88 @@ def beamforming():
     # ------ 可以设置想要搜索的频段
     # ------ 可以调整网格分辨率
 
-    
-    # 麦克风阵列限定区域 %注:后面没用
+    # 麦克风阵列限定区域
     mic_x = np.array([-0.5, 0.5])
     mic_y = np.array([-0.5, 0.5])
     # 扫描声源限定区域
     scan_x = np.array([-3, 3])
     scan_y = np.array([-3, 3])
     z_source = 1  # 麦克风阵列平面与扫描屏幕的距离
-    c = 343 # 声速
+    c = 343  # 声速
+    scan_resolution = 0.1  # 扫描网格的分辨率
+    # 确定扫描频段（800-4000 Hz）
+    search_freql = 800
+    search_frequ = 4000
 
     #  信号的采样频率
     # 引用: https://www.cnblogs.com/xingshansi/p/6799994.html
+
+    # save_wav()
     wav_path = "修改代码/resources/output.wav"
+    framerate, nframes, mic_signal = get_micSignal_from_wav(wav_path)
+
+    # 导入麦克风阵列
+    path_full = '修改代码/resources/6_spiral_array.mat'  # 须要读取的mat文件路径
+    mic_pos, mic_centre, mic_x_axis, mic_y_axis = get_micArray(path_full)
+
+    # draw_mic_array(mic_x_axis, mic_y_axis)
+
+    # 设定信号持续时间
+    t_start = 0
+    t_end = nframes/framerate
+
+    # mic_signal = simulateMicsignal(source_info, mic_info, c, fs, duration, mic_centre)
+
+    time_start_total = time.time()
+    time_start = time.time()
+    [CSM, freqs] = developCSM(mic_signal.T, search_freql,
+                              search_frequ, framerate, t_start, t_end)
+    time_end = time.time()
+    print('csm cost', time_end-time_start)
+
+    time_start = time.time()
+    g = steerVector(z_source, freqs, [scan_x, scan_y],
+                    scan_resolution, mic_pos.T, c, mic_centre)
+    time_end = time.time()
+    print('steervector cost', time_end-time_start)
+
+    # 波束成像 -- DAS算法
+    time_start = time.time()
+    [X, Y, B] = DAS(CSM, g, freqs, [scan_x, scan_y], scan_resolution)
+    time_end = time.time()
+    print('DAS cost', time_end-time_start)
+
+    # % 声压级单位转换
+    B[B < 0] = 0
+    eps = np.finfo(np.float64).eps
+    SPL = 20*np.log10((eps+np.sqrt(B.real))/2e-5)
+    np.save("testSPL.npy", SPL)
+    time_end_total = time.time()
+    # plot_figure(X, Y, SPL)
+    print('totally cost', time_end_total-time_start_total)
+
+
+def get_micArray(path_full):
+    try:
+        darray = scio.loadmat(path_full)
+    except:
+        darray = h5py.File(path_full)  # 如果python 报错
+    array = darray['array'][:]
+    mic_x_axis = array[:, 0]
+    mic_y_axis = array[:, 1]
+    mic_z_axis = 0
+    mic_pos = np.transpose([mic_x_axis, mic_y_axis])
+    mic_pos = np.concatenate(
+        (mic_pos, np.ones((mic_x_axis.size, 1))*mic_z_axis), axis=1)
+    # mic_centre = mean(mic_pos); % 阵列中心的坐标
+    mic_centre = mic_pos.mean(axis=0).reshape(1, -1)
+    return mic_pos, mic_centre, mic_x_axis, mic_y_axis
+
+
+def get_micSignal_from_wav(wav_path):
+    '''从wav文件中获得micsignal
+    自动进行裁切(8通道到6通道)
+    mic_sigal.size=channel,frames_total'''
     wavfile = wave.open(wav_path)
     framerate = wavfile.getframerate()
     params = wavfile.getparams()
@@ -107,92 +180,34 @@ def beamforming():
     wavfile.close()
 
     mic_signal = TrackAlignment(waveData)
-    mic_signal = mic_signal.T #mic_sigal.size=channel,frames_total
+    mic_signal = mic_signal.T  # mic_sigal.size=channel,frames_total
+    return framerate, nframes, mic_signal
 
-    # 导入麦克风阵列
-    path_full = '修改代码/resources/6_spiral_array.mat'  # 须要读取的mat文件路径
-    try:
-        darray = scio.loadmat(path_full)
-    except:
-        darray = h5py.File(path_full) #如果python 报错
-    array = darray['array'][:]
-    mic_x_axis = array[:, 0]
-    mic_y_axis = array[:, 1]
-    mic_z_axis = 0
-    mic_pos = np.transpose([mic_x_axis, mic_y_axis])
-    mic_pos = np.concatenate(
-        (mic_pos, np.ones((mic_x_axis.size, 1))*mic_z_axis), axis=1)
-    # mic_centre = mean(mic_pos); % 阵列中心的坐标
-    mic_centre = mic_pos.mean(axis=0).reshape(1, -1)
 
-    def draw_mic_array(mic_x_axis, mic_y_axis):
-        # 绘制麦克风阵列
-        plt.figure()
-        plt.plot(mic_x_axis, mic_y_axis, 'k.', markersize=20)
-        plt.xlim([min(mic_x_axis)-0.1, max(mic_x_axis)+0.1])
-        plt.ylim([min(mic_y_axis)-0.1, max(mic_y_axis)+0.1])
-        plt.show()
+def draw_mic_array(mic_x_axis, mic_y_axis):
+    '''绘制麦克风阵列'''
+    plt.figure()
+    plt.plot(mic_x_axis, mic_y_axis, 'k.', markersize=20)
+    plt.xlim([min(mic_x_axis)-0.1, max(mic_x_axis)+0.1])
+    plt.ylim([min(mic_y_axis)-0.1, max(mic_y_axis)+0.1])
+    plt.show()
 
-    # draw_mic_array(mic_x_axis, mic_y_axis)
 
-    # 设定信号持续时间 
-    t_start = 0
-    t_end = nframes/framerate 
+def plot_figure(X, Y, SPL):
+    # % 绘制波束成像图
 
-    # mic_signal = simulateMicsignal(source_info, mic_info, c, fs, duration, mic_centre)
+    # 解决中文显示问题
+    plt.rcParams['font.sans-serif'] = ['SimHei']
+    plt.rcParams['axes.unicode_minus'] = False
 
-    # 确定扫描频段（800-4000 Hz）
-    search_freql = 800 
-    search_frequ = 4000 
-    time_start_total = time.time()
-
-    time_start = time.time()
-    [CSM, freqs] = developCSM(mic_signal.T, search_freql,
-                              search_frequ, framerate, t_start, t_end)
-    time_end = time.time()
-    print('csm cost', time_end-time_start)
-
-    # 扫描网格的分辨率 
-    scan_resolution = 0.1 
-
-    time_start = time.time()
-    g = steerVector(z_source, freqs, [scan_x, scan_y],
-                    scan_resolution, mic_pos.T, c, mic_centre)
-    time_end = time.time()
-    print('steervector cost', time_end-time_start)
-
-    time_start = time.time()
-
-    # % 波束成像 -- DAS算法
-    [X, Y, B] = DAS(CSM, g, freqs, [scan_x, scan_y], scan_resolution)
-
-    time_end = time.time()
-    print('DAS cost', time_end-time_start)
-    # % 声压级单位转换
-    B[B < 0] = 0
-    eps = np.finfo(np.float64).eps
-    SPL = 20*np.log10((eps+np.sqrt(B.real))/2e-5)
-    np.save("testSPL.npy", SPL)
-    time_end_total = time.time()
-    print('totally cost', time_end_total-time_start_total)
-
-    def plot_figure(X, Y, SPL):
-        # % 绘制波束成像图
-
-        # 解决中文显示问题
-        plt.rcParams['font.sans-serif'] = ['SimHei']
-        plt.rcParams['axes.unicode_minus'] = False
-
-        plt.figure()  # figure;
-        BF_dr = 6
-        # BF_dr = 6; maxSPL = ceil(max(SPL(:)))
-        maxSPL = np.ceil(max(SPL.flatten('F')))
-        X, Y = np.meshgrid(X, Y)
-        plt.contourf(X, Y, SPL, np.arange((maxSPL-BF_dr), maxSPL+1, 1))
-        plt.colorbar()
-        plt.xlabel('x轴(m)')
-        plt.ylabel('y轴(m)')
-        plt.title('波束成像图')
-        plt.show()
-
-    # plot_figure(X, Y, SPL)
+    plt.figure()  # figure;
+    BF_dr = 6
+    # BF_dr = 6; maxSPL = ceil(max(SPL(:)))
+    maxSPL = np.ceil(max(SPL.flatten('F')))
+    X, Y = np.meshgrid(X, Y)
+    plt.contourf(X, Y, SPL, np.arange((maxSPL-BF_dr), maxSPL+1, 1))
+    plt.colorbar()
+    plt.xlabel('x轴(m)')
+    plt.ylabel('y轴(m)')
+    plt.title('波束成像图')
+    plt.show()

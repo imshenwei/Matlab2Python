@@ -28,6 +28,7 @@ def developCSM(mic_signal, freq_l, freq_u, Fs, t_start, t_end):
     # 初始化互谱矩阵CSM
     CSM = np.array(np.zeros((N_mic, N_mic, N_freqs)), dtype=complex)
     # 对采集到的时域数据进行傅里叶变换
+    mic_signal = mic_signal.T  # 原本没有的, 但是因为fft的矩阵报错而加上
     mic_signal_fft = sqrt(2) * \
         np.fft.fft(mic_signal[np.arange(
             start_sample-1, (end_samples + 1)-1, 1, dtype=int), :].T)/(end_samples-start_sample+1)  # mic_signal_fft = sqrt(2)*fft(mic_signal(start_sample:end_samples,:))/(end_samples-start_sample+1);

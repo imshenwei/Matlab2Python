@@ -12,6 +12,8 @@ import scipy.io as scio
 import time
 from resources.record_and_play.record import save_wav_only8
 from resources.record_and_play.pyaudio_record import save_wav_2and8
+import resources.record_and_play.mic_array_api as mic
+from resources.record_and_play.soundfile_record import save_micData
 
 
 def beamforming():
@@ -19,6 +21,7 @@ def beamforming():
 
     z_source = 1  # 麦克风阵列平面与扫描屏幕的距离
 
+    framerate = 48000  # 麦克风采样频率
     # 确定扫描频段（800-4000 Hz）
     search_freql = 800
     search_frequ = 4000
@@ -37,13 +40,13 @@ def beamforming():
     scan_x = np.array([-scan_r, scan_r])
     scan_y = np.array([-scan_r, scan_r])
 
-    try:
-        save_wav_only8()
-    except:
-        save_wav_2and8()
-    wav_path = "/home/pi/Desktop/修改代码/resources/output.wav"
-    framerate, nframes, mic_signal = get_micSignal_from_wav(wav_path)
-
+    # try:
+    #     save_wav_only8()
+    # except:
+    #     save_wav_2and8()
+    # wav_path = "/home/pi/Desktop/修改代码/resources/output.wav"
+    # framerate, nframes, mic_signal = get_micSignal_from_wav(wav_path)
+    framerate, nframes, mic_signal, duration = save_micData()
     # 导入麦克风阵列
     path_full = '/home/pi/Desktop/修改代码/resources/6_spiral_array.mat'  # 须要读取的mat文件路径
     # path_full = '修改代码/resources/2_spiral_array.mat'
@@ -53,7 +56,7 @@ def beamforming():
 
     # 设定信号持续时间
     t_start = 0
-    t_end = nframes/framerate
+    t_end = duration
 
     # mic_signal = simulateMicsignal(source_info, mic_info, c, fs, duration, mic_centre)
 

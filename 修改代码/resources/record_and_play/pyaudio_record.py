@@ -50,4 +50,4 @@ def save_wav_2and8():
     wf.close()
 
 
-save_wav_2and8()
+# save_wav_2and8()

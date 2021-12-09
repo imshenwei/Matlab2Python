@@ -46,4 +46,4 @@ def save_wav_only8():
     wf.close()
 
 
-save_wav_only8()
+# save_wav_only8()

@@ -76,8 +76,10 @@ def TrackAlignment(data):
 def get_MicSignal():
     return
 
+
 def save_wav():
     return
+
 
 def beamforming():
     # ------ DAS 波束成像算法（扫频模式）Delay Summation Algorithm
@@ -142,10 +144,10 @@ def beamforming():
     B[B < 0] = 0
     eps = np.finfo(np.float64).eps
     SPL = 20*np.log10((eps+np.sqrt(B.real))/2e-5)
-    np.save("testSPL.npy", SPL)
     time_end_total = time.time()
     # plot_figure(X, Y, SPL)
     print('totally cost', time_end_total-time_start_total)
+    return SPL
 
 
 def get_micArray(path_full):

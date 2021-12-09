@@ -155,8 +155,8 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def testDAS(self, frame):
         self.frame = frame
-        DAS_Algorithm()
-        SPL = np.load('testSPL.npy')  # SPL data
+
+        SPL = DAS_Algorithm()
         maxSPL = ceil(np.max(SPL))
         minSPL = floor(np.min(SPL))
         print([maxSPL, minSPL])

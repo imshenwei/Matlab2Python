@@ -14,6 +14,79 @@ from resources.record_and_play.record import save_wav_only8
 from resources.record_and_play.pyaudio_record import save_wav_2and8
 
 
+def beamforming():
+    '''DAS 波束成像算法（扫频模式）Delay Summation Algorithm'''
+
+    z_source = 1  # 麦克风阵列平面与扫描屏幕的距离
+
+    # 确定扫描频段（800-4000 Hz）
+    search_freql = 800
+    search_frequ = 4000
+    mic_r = 0.5  # 麦克风阵列限定半径
+    c = 343  # 声速
+    scan_resolution = z_source/20  # 0.05#0.1  # 扫描网格的分辨率
+    scan_r = z_source/2  # 扫描声源限定半径
+
+    #  信号的采样频率
+    # 引用: https://www.cnblogs.com/xingshansi/p/6799994.html
+
+    # 麦克风阵列限定区域
+    mic_x = np.array([-mic_r, mic_r])
+    mic_y = np.array([-mic_r, mic_r])
+    # 扫描声源限定区域
+    scan_x = np.array([-scan_r, scan_r])
+    scan_y = np.array([-scan_r, scan_r])
+
+    try:
+        save_wav_only8()
+    except:
+        save_wav_2and8()
+    wav_path = "/home/pi/Desktop/修改代码/resources/output.wav"
+    framerate, nframes, mic_signal = get_micSignal_from_wav(wav_path)
+
+    # 导入麦克风阵列
+    path_full = '/home/pi/Desktop/修改代码/resources/6_spiral_array.mat'  # 须要读取的mat文件路径
+    # path_full = '修改代码/resources/2_spiral_array.mat'
+    mic_pos, mic_centre, mic_x_axis, mic_y_axis = get_micArray(path_full)
+
+    # draw_mic_array(mic_x_axis, mic_y_axis)
+
+    # 设定信号持续时间
+    t_start = 0
+    t_end = nframes/framerate
+
+    # mic_signal = simulateMicsignal(source_info, mic_info, c, fs, duration, mic_centre)
+
+    time_start_total = time.time()
+    time_start = time.time()
+    [CSM, freqs] = developCSM(mic_signal.T, search_freql,
+                              search_frequ, framerate, t_start, t_end)
+    time_end = time.time()
+    print('csm cost', time_end-time_start)
+
+    time_start = time.time()
+    g = steerVector(z_source, freqs, [scan_x, scan_y],
+                    scan_resolution, mic_pos.T, c, mic_centre)
+    time_end = time.time()
+    print('steervector cost', time_end-time_start)
+
+    # 波束成像 -- DAS算法
+    time_start = time.time()
+    [X, Y, B] = DAS(CSM, g, freqs, [scan_x, scan_y], scan_resolution)
+    time_end = time.time()
+    print('DAS cost', time_end-time_start)
+
+    # % 声压级单位转换
+    B[B < 0] = 0
+    eps = np.finfo(np.float64).eps
+    SPL = 20*np.log10((eps+np.sqrt(B.real))/2e-5)
+
+    time_end_total = time.time()
+    # plot_figure(X, Y, SPL)
+    print('totally cost', time_end_total-time_start_total)
+    return SPL
+
+
 def simulateMicsignal():
     '''构建虚拟声源点'''
     # % 构建声源点  %注:设定信号持续时间和整合声源信息：source_info
@@ -75,80 +148,6 @@ def TrackAlignment(data):
     return y2
 
 
-def beamforming():
-    # ------ DAS 波束成像算法（扫频模式）Delay Summation Algorithm
-    # ------ 可以设置多个不同频率、不同声压级的点声源
-    # ------ 可以设置不同距离的扫描平面
-    # ------ 可以选择不同的麦克风阵列
-    # ------ 可以设置想要搜索的频段
-    # ------ 可以调整网格分辨率
-
-    # 麦克风阵列限定区域
-    mic_x = np.array([-0.5, 0.5])
-    mic_y = np.array([-0.5, 0.5])
-    # 扫描声源限定区域
-    scan_x = np.array([-3, 3])
-    scan_y = np.array([-3, 3])
-    z_source = 1  # 麦克风阵列平面与扫描屏幕的距离
-    c = 343  # 声速
-    scan_resolution = 0.1  # 扫描网格的分辨率
-    # 确定扫描频段（800-4000 Hz）
-    search_freql = 800
-    search_frequ = 4000
-
-    #  信号的采样频率
-    # 引用: https://www.cnblogs.com/xingshansi/p/6799994.html
-
-    save_wav_only8()
-    # try:
-    #     save_wav_only8()
-    # except:
-    #     save_wav_2and8()
-    wav_path = "修改代码/resources/output.wav"
-    framerate, nframes, mic_signal = get_micSignal_from_wav(wav_path)
-
-    # 导入麦克风阵列
-    path_full = '修改代码/resources/6_spiral_array.mat'  # 须要读取的mat文件路径
-    # path_full = '修改代码/resources/2_spiral_array.mat'
-    mic_pos, mic_centre, mic_x_axis, mic_y_axis = get_micArray(path_full)
-
-    # draw_mic_array(mic_x_axis, mic_y_axis)
-
-    # 设定信号持续时间
-    t_start = 0
-    t_end = nframes/framerate
-
-    # mic_signal = simulateMicsignal(source_info, mic_info, c, fs, duration, mic_centre)
-
-    time_start_total = time.time()
-    time_start = time.time()
-    [CSM, freqs] = developCSM(mic_signal.T, search_freql,
-                              search_frequ, framerate, t_start, t_end)
-    time_end = time.time()
-    print('csm cost', time_end-time_start)
-
-    time_start = time.time()
-    g = steerVector(z_source, freqs, [scan_x, scan_y],
-                    scan_resolution, mic_pos.T, c, mic_centre)
-    time_end = time.time()
-    print('steervector cost', time_end-time_start)
-
-    # 波束成像 -- DAS算法
-    time_start = time.time()
-    [X, Y, B] = DAS(CSM, g, freqs, [scan_x, scan_y], scan_resolution)
-    time_end = time.time()
-    print('DAS cost', time_end-time_start)
-
-    # % 声压级单位转换
-    B[B < 0] = 0
-    eps = np.finfo(np.float64).eps
-    SPL = 20*np.log10((eps+np.sqrt(B.real))/2e-5)
-    np.save("testSPL.npy", SPL)
-    time_end_total = time.time()
-    # plot_figure(X, Y, SPL)
-    print('totally cost', time_end_total-time_start_total)
-
-
 def get_micArray(path_full):
     try:
         darray = scio.loadmat(path_full)
@@ -169,7 +168,9 @@ def get_micArray(path_full):
 def get_micSignal_from_wav(wav_path):
     '''从wav文件中获得micsignal
     自动进行裁切(8通道到6通道)
-    mic_sigal.size=channel,frames_total'''
+    mic_sigal.size=channel,frames_total
+    IN: wav存储路径wav_path
+    OUT: 采样频率framerate, 采样点总数nframes, 6通道麦克风信号mic_signal'''
     wavfile = wave.open(wav_path)
     framerate = wavfile.getframerate()
     params = wavfile.getparams()

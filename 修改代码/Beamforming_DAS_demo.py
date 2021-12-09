@@ -82,22 +82,20 @@ def save_wav():
 
 
 def beamforming():
-    # ------ DAS 波束成像算法（扫频模式）Delay Summation Algorithm
-    # ------ 可以设置多个不同频率、不同声压级的点声源
-    # ------ 可以设置不同距离的扫描平面
-    # ------ 可以选择不同的麦克风阵列
-    # ------ 可以设置想要搜索的频段
-    # ------ 可以调整网格分辨率
+    """DAS 波束成像算法（扫频模式）Delay Summation Algorithm"""
+
+    z_source = 1  # 麦克风阵列平面与扫描屏幕的距离
 
     # 麦克风阵列限定区域
-    mic_x = np.array([-0.5, 0.5])
-    mic_y = np.array([-0.5, 0.5])
+    mic_r = 0.5  # 麦克风阵列限定区域半径
+    mic_x = np.array([-mic_r, mic_r])
+    mic_y = np.array([-mic_r, mic_r])
     # 扫描声源限定区域
-    scan_x = np.array([-3, 3])
-    scan_y = np.array([-3, 3])
-    z_source = 1  # 麦克风阵列平面与扫描屏幕的距离
+    scan_r = z_source / 2  # 扫描声源限定区域半径
+    scan_x = np.array([-scan_r, scan_r])
+    scan_y = np.array([-scan_r, scan_r])
     c = 343  # 声速
-    scan_resolution = 0.1  # 扫描网格的分辨率
+    scan_resolution = z_source/20  # 扫描网格的分辨率
     # 确定扫描频段（800-4000 Hz）
     search_freql = 800
     search_frequ = 4000

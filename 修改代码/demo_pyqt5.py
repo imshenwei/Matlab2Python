@@ -167,7 +167,9 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
         time3 = 0
         image_height, image_width, image_depth = self.frame.shape
         pic3 = np.array(np.zeros((image_height, image_width, 3)))
-        pic1 = np.array(np.zeros((61, 61)))  # 81
+        pic1_width = max(SPL.shape)
+        # pic_width和分辨率大小 反比成型区域大小; 区域大小正比于扫描平面大小
+        pic1 = np.array(np.zeros((pic1_width, pic1_width)))
         color1 = [0, 255, 200, 100, 50]
         start = time.time_ns()
 

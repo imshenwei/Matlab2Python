@@ -228,20 +228,18 @@ def beamforming():
     t_start = 0
     t_end = nframes/framerate
 
+    freqs, N_freqs, freq_sels = freqs_precaulate(
+        search_freql, search_frequ, framerate, t_end)
+    g = steerVector(z_source, freqs, [scan_x, scan_y],
+                    scan_resolution, mic_pos.T, c, mic_centre)
     # mic_signal = simulateMicsignal(source_info, mic_info, c, fs, duration, mic_centre)
 
     time_start_total = time.time()
     time_start = time.time()
-    [CSM, freqs] = developCSM(mic_signal.T, search_freql,
-                              search_frequ, framerate, t_start, t_end)
+    CSM = developCSM(mic_signal.T, search_freql,
+                     search_frequ, framerate, t_start, t_end, N_freqs, freq_sels)
     time_end = time.time()
     print('csm cost', time_end-time_start)
-
-    time_start = time.time()
-    g = steerVector(z_source, freqs, [scan_x, scan_y],
-                    scan_resolution, mic_pos.T, c, mic_centre)
-    time_end = time.time()
-    print('steervector cost', time_end-time_start)
 
     # 波束成像 -- DAS算法
     time_start = time.time()

@@ -49,11 +49,11 @@ def TrackAlignment(data):
     return y2
 
 
-def simulateMicsignal():
+def simulateMicsignal(mic_pos, z_source, c, framerate, mic_centre, t_start, t_end):
     '''构建虚拟声源点'''
     # % 构建声源点  %注:设定信号持续时间和整合声源信息：source_info
-    source_x = np.array([-1, 0.5]).reshape(1, -1).T  # source_x = [-1,0.5]';
-    source_y = np.array([0, 1]).reshape(1, -1).T  # source_y = [0,1]';
+    source_x = np.array([-0.2, 0.3]).reshape(1, -1).T  # source_x = [-1,0.5]';
+    source_y = np.array([0, 0.1]).reshape(1, -1).T  # source_y = [0,1]';
 
     # % 设定声源频率
     source1_freq = 2000
@@ -61,10 +61,8 @@ def simulateMicsignal():
     # sources_freq = [source1_freq, source2_freq]';  %注:整合声源信息：source_info
     sources_freq = np.array([source1_freq, source2_freq]).reshape(1, -1).T
 
-    # % 设定信号持续时间  %计算CSM以及确定扫描频率developCSM
-    t_start = 0
-    t_end = 0.02  # nframes/framerate  # t_start = 0;  t_end = 0.02
-    source_duration = t_end*ones(length(source_x), 1)
+    # % 设定信号持续时间
+    # source_duration = t_end*ones(length(source_x), 1)
     # %注: 整合声源信息：source_info和获取麦克风阵列输出simulateArraydata
     source_duration = t_end*np.ones((max(source_x.shape), 1))
 
@@ -77,15 +75,13 @@ def simulateMicsignal():
     # % 整合声源信息：source_info % 注: 获取麦克风阵列输出simulateArraydata
     # % 声源点坐标x / 声源点坐标y / 声源点坐标z（到扫描平面距离）/ 声源频率 / 声压值
 
-    source_info = [source_x, source_y, z_source *
-                   ones(length(source_x), 1), sources_freq, sources_spl, source_duration]
+    # source_info = [source_x, source_y, z_source *
+    #                ones(length(source_x), 1), sources_freq, sources_spl, source_duration]
     source_info = np.concatenate((source_x, source_y, z_source*np.ones(
         (max(source_x.shape), 1)), sources_freq, sources_spl, source_duration), axis=1)
     # https://www.cnblogs.com/cymwill/p/8358866.html
 
     # % 获取麦克风阵列输出 % 注:计算CSM以及确定扫描频率developCSM
-    mic_signal = simulateArraydata(
-        source_info, mic_pos, c, framerate, source_duration, mic_centre)
     mic_signal = simulateArraydata(
         source_info, mic_pos, c, framerate, source_duration, mic_centre)
     # mic_signal.size() = (nchannels, nframes) 且不归一化

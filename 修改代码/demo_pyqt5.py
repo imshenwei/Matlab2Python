@@ -245,9 +245,10 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         # draw_mic_array(mic_x_axis, mic_y_axis)
 
-        # mic_signal = simulateMicsignal(source_info, mic_info, c, fs, duration, mic_centre)
+        mic_signal = simulateMicsignal(
+            self.mic_pos, self.z_source, self.c, self.framerate, self.mic_centre, self.t_start, self.t_end)
 
-        mic_signal = self.mics.get_data().T
+        # mic_signal = self.mics.get_data().T
         time_start_total = time.time()
         time_start = time.time()
         CSM = developCSM(mic_signal.T, self.search_freql,

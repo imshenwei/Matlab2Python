@@ -9,7 +9,7 @@ import cv2
 import numpy as np
 from numpy import *  # noqa
 import time
-from Beamforming_DAS_demo import beamforming as DAS_Algorithm
+from Beamforming_DAS_demo import *
 
 
 class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -19,9 +19,9 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # UI
         self.setupUi(self)
         self.move_center()
-
-        # open camera
+        #
         self.open_camera()
+        self.beamforming_init()
 
         # B1槽连接 pushButton
         self.pushButton.setText('Algorithm Start')
@@ -156,7 +156,7 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def testDAS(self, frame):
         self.frame = frame
 
-        SPL = DAS_Algorithm()
+        SPL = self.beamforming()
         maxSPL = ceil(np.max(SPL))
         minSPL = floor(np.min(SPL))
         print([maxSPL, minSPL])
@@ -194,6 +194,72 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.hit_img = cv2.add(uint8(pic3), uint8(self.frame))
         return self.hit_img
+
+    def beamforming_init(self):
+        self.z_source = 1  # 麦克风阵列平面与扫描屏幕的距离
+
+        # 麦克风阵列限定区域
+        self.mic_r = 0.5  # 麦克风阵列限定区域半径
+        self.mic_x = np.array([-self.mic_r, self.mic_r])
+        self.mic_y = np.array([-self.mic_r, self.mic_r])
+        # 扫描声源限定区域
+        self.scan_r = self.z_source / 2  # 扫描声源限定区域半径
+        self.scan_x = np.array([-self.scan_r, self.scan_r])
+        self.scan_y = np.array([-self.scan_r, self.scan_r])
+        self.c = 343  # 声速
+        self.scan_resolution = self.z_source/20  # 扫描网格的分辨率
+        # 确定扫描频段（800-4000 Hz）
+        self.search_freql = 800
+        self.search_frequ = 4000
+        # 设定信号持续时间
+        self.t_start = 0
+        self.t_end = 0.011609977324263039
+        self.framerate = 44100
+        # 导入麦克风阵列
+        path_full = '修改代码/resources/6_spiral_array.mat'  # 须要读取的mat文件路径
+        self.mic_pos, self.mic_centre, self.mic_x_axis, self.mic_y_axis = get_micArray(
+            path_full)
+        self.freqs, self.N_freqs, self.freq_sels = freqs_precaulate(
+            self.search_freql, self.search_frequ, self.framerate, self.t_end)
+        self.g = steerVector(self.z_source, self.freqs, [self.scan_x, self.scan_y],
+                             self.scan_resolution, self.mic_pos.T, self.c, self.mic_centre)
+
+    def beamforming(self):
+        """DAS 波束成像算法（扫频模式）Delay Summation Algorithm"""
+
+        #  信号的采样频率
+        # 引用: https://www.cnblogs.com/xingshansi/p/6799994.html
+
+        # save_wav()
+        wav_path = "修改代码/resources/output_test8.wav"
+        framerate, nframes, mic_signal = get_micSignal_from_wav(wav_path)
+
+        # draw_mic_array(mic_x_axis, mic_y_axis)
+
+        # mic_signal = simulateMicsignal(source_info, mic_info, c, fs, duration, mic_centre)
+
+        time_start_total = time.time()
+        time_start = time.time()
+        CSM = developCSM(mic_signal.T, self.search_freql,
+                         self.search_frequ, framerate, self.t_start, self.t_end, self.N_freqs, self.freq_sels)
+        time_end = time.time()
+        print('csm cost', time_end-time_start)
+
+        # 波束成像 -- DAS算法
+        time_start = time.time()
+        [X, Y, B] = DAS(CSM, self.g, self.freqs, [
+                        self.scan_x, self.scan_y], self.scan_resolution)
+        time_end = time.time()
+        print('DAS cost', time_end-time_start)
+
+        # % 声压级单位转换
+        B[B < 0] = 0
+        eps = np.finfo(np.float64).eps
+        SPL = 20*np.log10((eps+np.sqrt(B.real))/2e-5)
+        time_end_total = time.time()
+        # plot_figure(X, Y, SPL)
+        print('totally cost', time_end_total-time_start_total)
+        return SPL
 
 
 if __name__ == '__main__':

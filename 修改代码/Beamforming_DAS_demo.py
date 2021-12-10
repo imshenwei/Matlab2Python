@@ -12,6 +12,43 @@ import scipy.io as scio
 import time
 
 
+def get_micSignal_from_wav(wav_path):
+    '''从wav文件中获得micsignal
+    自动进行裁切(8通道到6通道)
+    mic_sigal.size=channel,frames_total'''
+    wavfile = wave.open(wav_path)
+    framerate = wavfile.getframerate()
+    params = wavfile.getparams()
+    nchannels, sampwidth, framerate, nframes = params[:4]
+    strData = wavfile.readframes(nframes)  # 读取音频，字符串格式
+    waveData = np.fromstring(strData, dtype=np.int16)  # 将字符串转化为int
+    # waveData = waveData*1.0/(max(abs(waveData)))  # wave幅值归一化
+    waveData = np.reshape(waveData, [nchannels, nframes])
+    wavfile.close()
+
+    mic_signal = TrackAlignment(waveData)
+    mic_signal = mic_signal.T  # mic_sigal.size=channel,frames_total
+    return framerate, nframes, mic_signal
+
+
+def TrackAlignment(data):
+    '''裁切'''
+    y = data.T
+    s_x = np.argsort(np.max(y, axis=0))
+    y2 = []
+    if abs(s_x[0]-s_x[1]) == 1:
+        s_x_max = max(s_x[0:1])
+        if(s_x_max == 1):
+            y2 = y[:, 2:8]
+        elif(s_x_max < 7 and s_x_max > 1):
+            y2 = np.hstack((y[:, s_x_max+1:8], y[:, 0:s_x_max-1]))
+        else:
+            y2 = y[:, 0:6]
+    else:
+        y2 = y[:, 1:7]
+    return y2
+
+
 def simulateMicsignal():
     '''构建虚拟声源点'''
     # % 构建声源点  %注:设定信号持续时间和整合声源信息：source_info
@@ -55,24 +92,6 @@ def simulateMicsignal():
     return mic_signal
 
 
-def TrackAlignment(data):
-    '''裁切'''
-    y = data.T
-    s_x = np.argsort(np.max(y, axis=0))
-    y2 = []
-    if abs(s_x[0]-s_x[1]) == 1:
-        s_x_max = max(s_x[0:1])
-        if(s_x_max == 1):
-            y2 = y[:, 2:8]
-        elif(s_x_max < 7 and s_x_max > 1):
-            y2 = np.hstack((y[:, s_x_max+1:8], y[:, 0:s_x_max-1]))
-        else:
-            y2 = y[:, 0:6]
-    else:
-        y2 = y[:, 1:7]
-    return y2
-
-
 def get_MicSignal():
     return
 
@@ -96,25 +115,6 @@ def get_micArray(path_full):
     # mic_centre = mean(mic_pos); % 阵列中心的坐标
     mic_centre = mic_pos.mean(axis=0).reshape(1, -1)
     return mic_pos, mic_centre, mic_x_axis, mic_y_axis
-
-
-def get_micSignal_from_wav(wav_path):
-    '''从wav文件中获得micsignal
-    自动进行裁切(8通道到6通道)
-    mic_sigal.size=channel,frames_total'''
-    wavfile = wave.open(wav_path)
-    framerate = wavfile.getframerate()
-    params = wavfile.getparams()
-    nchannels, sampwidth, framerate, nframes = params[:4]
-    strData = wavfile.readframes(nframes)  # 读取音频，字符串格式
-    waveData = np.fromstring(strData, dtype=np.int16)  # 将字符串转化为int
-    # waveData = waveData*1.0/(max(abs(waveData)))  # wave幅值归一化
-    waveData = np.reshape(waveData, [nchannels, nframes])
-    wavfile.close()
-
-    mic_signal = TrackAlignment(waveData)
-    mic_signal = mic_signal.T  # mic_sigal.size=channel,frames_total
-    return framerate, nframes, mic_signal
 
 
 def draw_mic_array(mic_x_axis, mic_y_axis):

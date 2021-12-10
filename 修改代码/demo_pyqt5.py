@@ -10,6 +10,7 @@ import numpy as np
 from numpy import *  # noqa
 import time
 from Beamforming_DAS_demo import *
+import resources.record_and_play.mic_array_api as mic
 
 
 class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -22,6 +23,7 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
         #
         self.open_camera()
         self.beamforming_init()
+        self.mics = mic.mic_array()
 
         # B1槽连接 pushButton
         self.pushButton.setText('Algorithm Start')
@@ -213,8 +215,8 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.search_frequ = 4000
         # 设定信号持续时间
         self.t_start = 0
-        self.t_end = 0.011609977324263039
-        self.framerate = 44100
+        self.t_end = 0.02  # 0.011609977324263039
+        self.framerate = 48000  # 44100
         # 导入麦克风阵列
         path_full = '修改代码/resources/6_spiral_array.mat'  # 须要读取的mat文件路径
         self.mic_pos, self.mic_centre, self.mic_x_axis, self.mic_y_axis = get_micArray(
@@ -231,17 +233,18 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # 引用: https://www.cnblogs.com/xingshansi/p/6799994.html
 
         # save_wav()
-        wav_path = "修改代码/resources/output_test8.wav"
-        framerate, nframes, mic_signal = get_micSignal_from_wav(wav_path)
+        # wav_path = "修改代码/resources/output_test8.wav"
+        # self.framerate, nframes, mic_signal = get_micSignal_from_wav(wav_path)
 
         # draw_mic_array(mic_x_axis, mic_y_axis)
 
         # mic_signal = simulateMicsignal(source_info, mic_info, c, fs, duration, mic_centre)
 
+        mic_signal = self.mics.get_data().T
         time_start_total = time.time()
         time_start = time.time()
         CSM = developCSM(mic_signal.T, self.search_freql,
-                         self.search_frequ, framerate, self.t_start, self.t_end, self.N_freqs, self.freq_sels)
+                         self.search_frequ, self.framerate, self.t_start, self.t_end, self.N_freqs, self.freq_sels)  # micsignal.shape==6,512
         time_end = time.time()
         print('csm cost', time_end-time_start)
 

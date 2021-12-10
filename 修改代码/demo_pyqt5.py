@@ -38,6 +38,7 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def paintEvent(self, a0: QtGui.QPaintEvent):
         if self.open_flag:
+            time_paintallstart = time.time()
             _, frame = self.cap.read()  # * 读取摄像头当前帧frame和布尔值_
             # 查看cv2.resize:https://blog.csdn.net/qwert15135156501/article/details/104534131
             # *基于局部像素的重采样g
@@ -51,7 +52,9 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 frame.data, frame.shape[1], frame.shape[0], frame.shape[1]*3, QImage.Format_RGB888)
 
             self.label_2.setPixmap(QPixmap.fromImage(self.Qframe))  # 投影到label2
-
+            time_paintallend = time.time()
+            print('paintall cost', time_paintallend-time_paintallstart)
+            print('一秒', 1/(time_paintallend-time_paintallstart), '帧')
             self.update()
 
     def showImage(self):
@@ -221,10 +224,14 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
         path_full = '修改代码/resources/6_spiral_array.mat'  # 须要读取的mat文件路径
         self.mic_pos, self.mic_centre, self.mic_x_axis, self.mic_y_axis = get_micArray(
             path_full)
+        time_steerVector_start = time.time()
+
         self.freqs, self.N_freqs, self.freq_sels = freqs_precaulate(
             self.search_freql, self.search_frequ, self.framerate, self.t_end)
         self.g = steerVector(self.z_source, self.freqs, [self.scan_x, self.scan_y],
                              self.scan_resolution, self.mic_pos.T, self.c, self.mic_centre)
+        time_steerVector_end = time.time()
+        print('steerVector cost', time_steerVector_end-time_steerVector_start)
 
     def beamforming(self):
         """DAS 波束成像算法（扫频模式）Delay Summation Algorithm"""

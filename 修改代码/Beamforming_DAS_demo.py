@@ -63,7 +63,7 @@ def simulateMicsignal():
 
     # % 设定信号持续时间  %计算CSM以及确定扫描频率developCSM
     t_start = 0
-    t_end = nframes/framerate  # t_start = 0;  t_end = 0.02
+    t_end = 0.02  # nframes/framerate  # t_start = 0;  t_end = 0.02
     source_duration = t_end*ones(length(source_x), 1)
     # %注: 整合声源信息：source_info和获取麦克风阵列输出simulateArraydata
     source_duration = t_end*np.ones((max(source_x.shape), 1))

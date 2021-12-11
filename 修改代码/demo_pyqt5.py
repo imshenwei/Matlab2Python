@@ -16,24 +16,26 @@ import resources.record_and_play.mic_array_api as mic
 class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self):
         super(mywindow, self).__init__()
-
         # UI
         self.setupUi(self)
         self.move_center()
         #
         self.open_camera()
+
+
+<< << << < HEAD
         self.beamforming_init()
         self.mics = mic.mic_array()
 
+== == == =
+>>>>>> > 实现DAS分支--实时收集migsignal
         # B1槽连接 pushButton
         self.pushButton.setText('Algorithm Start')
         self.pushButton.clicked.connect(self.camera_switch)
-
         # B2槽连接
         self.B2.setText('Close Window')
         self.B2.clicked.connect(self.closeWindow)
-
-        # Painter
+        #
         self.painter = QPainter(self)
 
     def paintEvent(self, a0: QtGui.QPaintEvent):
@@ -56,6 +58,40 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
             print('paintall cost', time_paintallend-time_paintallstart)
             print('一秒', 1/(time_paintallend-time_paintallstart), '帧')
             self.update()
+
+    def testDAS(self, frame):
+        SPL = DAS_Algorithm()  # SPL data
+        maxSPL = ceil(np.max(SPL))
+        minSPL = floor(np.min(SPL))
+        print([maxSPL, minSPL])
+
+        image_height, image_width, image_depth = frame.shape
+        pic3 = np.array(np.zeros((image_height, image_width, 3)))
+        pic1 = np.array(np.zeros((61, 61)))  # 81
+        color1 = [0, 255, 200, 100, 50]
+        start = time.time_ns()
+
+        # frame = frame[:, 80:560, :]
+        end1 = time.time_ns()
+
+        pic1[np.where(SPL > maxSPL-1)] = color1[1]
+        pic1[np.where(SPL > maxSPL-2)
+             and np.where(SPL <= maxSPL-1)] = color1[2]
+        pic1[np.where(SPL > maxSPL-3)
+             and np.where(SPL <= maxSPL-2)] = color1[3]
+        pic1[np.where(SPL > maxSPL-4)
+             and np.where(SPL <= maxSPL-3)] = color1[4]
+        pic1[np.where(SPL <= maxSPL-4)] = color1[0]
+
+        # pic2=np.kron(pic1[0:80,0:80],np.ones((6,6)))
+        pic2 = cv2.resize(pic1, (image_width, image_height),
+                          interpolation=cv2.INTER_AREA)
+
+        end2 = time.time_ns()
+        pic3[:, :, 0] = pic2  # RGB通道
+
+        frame = cv2.add(uint8(pic3), uint8(frame))
+        return frame
 
     def showImage(self):
         flag, self.cap_im = self.cap.read()
@@ -100,32 +136,12 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.open_flag = bool(1-self.open_flag)
 
-    def init_imag(self):
-        # Im = cv2.imread('dog.jpg')
-        Im = cv2.imread('XMU2.jpg')
-
-        # opencv读图片是BGR，qt显示要RGB，
-        QIm = cv2.cvtColor(Im, cv2.COLOR_BGR2RGB)
-
-        image_height, image_width, image_depth = Im.shape     # 获取图像的高，宽以及深度。
-
-        QIm = QImage(QIm.data, image_width, image_height,       # 创建QImage格式的图像，并读入图像信息
-                     image_width * image_depth,
-                     QImage.Format_RGB888)
-
-        self.label_2.setPixmap(QPixmap.fromImage(QIm))  # 显示图像
-
     def DSP_A(self):
 
         SPL = np.load('testSPL.npy')  # SPL data
         maxSPL = ceil(np.max(SPL))
         minSPL = floor(np.min(SPL))
         print([maxSPL, minSPL])
-
-        count = 0
-        time1 = 0
-        time2 = 0
-        time3 = 0
 
         self.ret, self.frame = self.cap.read()
         image_height, image_width, image_depth = self.frame.shape
@@ -275,9 +291,6 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    # MainWindow = QMainWindow()
     window = mywindow()
     window.show()
-
-    # 判断
     sys.exit(app.exec_())

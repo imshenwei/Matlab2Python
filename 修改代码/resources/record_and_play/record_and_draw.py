@@ -18,7 +18,11 @@ import mic_array_api as mic
 
 if __name__ == '__main__':
     mics = mic.mic_array()
-    data = mics.get_data()
+
+    RESPEAKER_RATE = 16000
+    CHUNK = 1024
+    RECORD_SECONDS = 0.02
+    data = mics.get_data(RESPEAKER_RATE / CHUNK * RECORD_SECONDS)
 
     fft_data = abs(np.fft.fft(data.T))
 

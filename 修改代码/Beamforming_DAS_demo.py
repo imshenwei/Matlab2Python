@@ -215,7 +215,7 @@ def beamforming():
     # 引用: https://www.cnblogs.com/xingshansi/p/6799994.html
 
     # save_wav()
-    wav_path = "修改代码/resources/output.wav"
+    wav_path = "修改代码/resources/output_test8.wav"
     framerate, nframes, mic_signal = get_micSignal_from_wav(wav_path)
 
     # 导入麦克风阵列

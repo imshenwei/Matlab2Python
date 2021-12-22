@@ -23,7 +23,7 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
         #
         self.open_camera()
         self.beamforming_init()
-        self.mics = mic.mic_array()
+        # self.mics = mic.mic_array()
 
         # B1槽连接 pushButton
         self.pushButton.setText('Algorithm Start')
@@ -208,11 +208,11 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.mic_x = np.array([-self.mic_r, self.mic_r])
         self.mic_y = np.array([-self.mic_r, self.mic_r])
         # 扫描声源限定区域
-        self.scan_r = self.z_source / 2  # 扫描声源限定区域半径
+        self.scan_r = 1  # self.z_source / 2  # 扫描声源限定区域半径
         self.scan_x = np.array([-self.scan_r, self.scan_r])
         self.scan_y = np.array([-self.scan_r, self.scan_r])
         self.c = 343  # 声速
-        self.scan_resolution = self.z_source/40  # 扫描网格的分辨率
+        self.scan_resolution = 0.05  # 扫描网格的分辨率
         # 确定扫描频段（800-4000 Hz）
         self.search_freql = 800
         self.search_frequ = 4000
@@ -222,10 +222,12 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.framerate = 48000  # 44100
         # 导入麦克风阵列
         path_full = '修改代码/resources/6_spiral_array.mat'  # 须要读取的mat文件路径
+        # path_full = '修改代码/resources/56_spiral_array.mat'
         self.mic_pos, self.mic_centre, self.mic_x_axis, self.mic_y_axis = get_micArray(
             path_full)
         time_steerVector_start = time.time()
 
+        # *steerVector算法
         self.freqs, self.N_freqs, self.freq_sels = freqs_precaulate(
             self.search_freql, self.search_frequ, self.framerate, self.t_end)
         self.g = steerVector(self.z_source, self.freqs, [self.scan_x, self.scan_y],
@@ -245,10 +247,10 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         # draw_mic_array(mic_x_axis, mic_y_axis)
 
-        # mic_signal = simulateMicsignal(
-        #     self.mic_pos, self.z_source, self.c, self.framerate, self.mic_centre, self.t_start, self.t_end)
+        mic_signal = simulateMicsignal(
+            self.mic_pos, self.z_source, self.c, self.framerate, self.mic_centre, self.t_start, self.t_end)
 
-        mic_signal = self.mics.get_data().T
+        # mic_signal = self.mics.get_data().T
         time_start_total = time.time()
         time_start = time.time()
         CSM = developCSM(mic_signal.T, self.search_freql,
@@ -268,7 +270,7 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
         eps = np.finfo(np.float64).eps
         SPL = 20*np.log10((eps+np.sqrt(B.real))/2e-5)
         time_end_total = time.time()
-        # plot_figure(X, Y, SPL)
+        plot_figure(X, Y, SPL)
         print('totally cost', time_end_total-time_start_total)
         return SPL
 
@@ -279,5 +281,4 @@ if __name__ == '__main__':
     window = mywindow()
     window.show()
 
-    # 判断
     sys.exit(app.exec_())

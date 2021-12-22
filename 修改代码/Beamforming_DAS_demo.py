@@ -51,37 +51,29 @@ def TrackAlignment(data):
 
 def simulateMicsignal(mic_pos, z_source, c, framerate, mic_centre, t_start, t_end):
     '''构建虚拟声源点'''
-    # % 构建声源点  %注:设定信号持续时间和整合声源信息：source_info
-    source_x = np.array([-0.2, 0.3]).reshape(1, -1).T  # source_x = [-1,0.5]';
-    source_y = np.array([0, 0.1]).reshape(1, -1).T  # source_y = [0,1]';
-
-    # % 设定声源频率
+    # 构建声源点
+    source_x = np.array([-0.5, 0.5]).reshape(1, -1).T  # source_x = [-1,0.5]';
+    source_y = np.array([0.50, -0.5]).reshape(1, -1).T  # source_y = [0,1]';
+    # 设定声源频率
     source1_freq = 2000
-    source2_freq = 3000  # source1_freq = 2000;  source2_freq = 3000
-    # sources_freq = [source1_freq, source2_freq]';  %注:整合声源信息：source_info
+    source2_freq = 3000
     sources_freq = np.array([source1_freq, source2_freq]).reshape(1, -1).T
 
     # % 设定信号持续时间
-    # source_duration = t_end*ones(length(source_x), 1)
-    # %注: 整合声源信息：source_info和获取麦克风阵列输出simulateArraydata
     source_duration = t_end*np.ones((max(source_x.shape), 1))
 
     # % 设定声源声压有效值
     source1_spl = 100
-    source2_spl = 100  # source1_spl = 100; source2_spl = 100
-    # sources_spl = [source1_spl, source2_spl].';   %注:整合声源信息：source_info
+    source2_spl = 100
     sources_spl = np.array([source1_spl, source2_spl]).reshape(1, -1).T
 
-    # % 整合声源信息：source_info % 注: 获取麦克风阵列输出simulateArraydata
-    # % 声源点坐标x / 声源点坐标y / 声源点坐标z（到扫描平面距离）/ 声源频率 / 声压值
-
-    # source_info = [source_x, source_y, z_source *
-    #                ones(length(source_x), 1), sources_freq, sources_spl, source_duration]
+    # 整合声源信息：source_info
+    # 声源点坐标x / 声源点坐标y / 声源点坐标z（到扫描平面距离）/ 声源频率 / 声压值
     source_info = np.concatenate((source_x, source_y, z_source*np.ones(
         (max(source_x.shape), 1)), sources_freq, sources_spl, source_duration), axis=1)
     # https://www.cnblogs.com/cymwill/p/8358866.html
 
-    # % 获取麦克风阵列输出 % 注:计算CSM以及确定扫描频率developCSM
+    # % 获取麦克风阵列输出
     mic_signal = simulateArraydata(
         source_info, mic_pos, c, framerate, source_duration, mic_centre)
     # mic_signal.size() = (nchannels, nframes) 且不归一化
@@ -104,12 +96,15 @@ def get_micArray(path_full):
     array = darray['array'][:]
     mic_x_axis = array[:, 0]
     mic_y_axis = array[:, 1]
+    # mic_x_axis = array[0, :]
+    # mic_y_axis = array[1, :]
     mic_z_axis = 0
     mic_pos = np.transpose([mic_x_axis, mic_y_axis])
     mic_pos = np.concatenate(
         (mic_pos, np.ones((mic_x_axis.size, 1))*mic_z_axis), axis=1)
     # mic_centre = mean(mic_pos); % 阵列中心的坐标
     mic_centre = mic_pos.mean(axis=0).reshape(1, -1)
+    # draw_mic_array(mic_x_axis, mic_y_axis)
     return mic_pos, mic_centre, mic_x_axis, mic_y_axis
 
 
@@ -123,7 +118,7 @@ def draw_mic_array(mic_x_axis, mic_y_axis):
 
 
 def plot_figure(X, Y, SPL):
-    # % 绘制波束成像图
+    """绘制SPL波束成像图"""
 
     # 解决中文显示问题
     plt.rcParams['font.sans-serif'] = ['SimHei']

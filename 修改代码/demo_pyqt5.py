@@ -52,19 +52,10 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 frame.data, frame.shape[1], frame.shape[0], frame.shape[1]*3, QImage.Format_RGB888)
 
             self.label_2.setPixmap(QPixmap.fromImage(self.Qframe))  # 投影到label2
-            time_paintallend = time.time()
-            print('paintall cost', time_paintallend-time_paintallstart)
-            print('一秒', 1/(time_paintallend-time_paintallstart), '帧')
-            self.update()
 
-    def showImage(self):
-        flag, self.cap_im = self.cap.read()
-        image_height, image_width, image_depth = self.cap_im.shape
-        QIm = cv2.cvtColor(self.cap_im, cv2.COLOR_BGR2RGB)
-        QIm = QImage(QIm, image_width, image_height,       # 创建QImage格式的图像，并读入图像信息
-                     image_width * image_depth,
-                     QImage.Format_RGB888)
-        self.label_2.setPixmap(QPixmap.fromImage(QIm))
+            print('paintall cost', time.time()-time_paintallstart)
+            print('一秒', 1/(time.time()-time_paintallstart), '帧')
+            self.update()
 
     def move_center(self):
         qr = self.frameGeometry()
@@ -84,12 +75,13 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def camera_switch(self):
         if self.open_flag:  # 关闭
-            self.DSP_A()
+
             self.cap.release()
             self.label_2.clear()
             self.pushButton.setText('Open Camera')
-            self.init_imag()
+
         else:
+
             flag = self.cap.open(self.CAM_NUM)
             if flag is False:
                 mas = QMessageBox.Warning(self, u'Warning', u'Plz check camera!',  # noqa
@@ -99,64 +91,6 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.pushButton.setText('Algorithm Start')
 
         self.open_flag = bool(1-self.open_flag)
-
-    def init_imag(self):
-        # Im = cv2.imread('dog.jpg')
-        Im = cv2.imread('XMU2.jpg')
-
-        # opencv读图片是BGR，qt显示要RGB，
-        QIm = cv2.cvtColor(Im, cv2.COLOR_BGR2RGB)
-
-        image_height, image_width, image_depth = Im.shape     # 获取图像的高，宽以及深度。
-
-        QIm = QImage(QIm.data, image_width, image_height,       # 创建QImage格式的图像，并读入图像信息
-                     image_width * image_depth,
-                     QImage.Format_RGB888)
-
-        self.label_2.setPixmap(QPixmap.fromImage(QIm))  # 显示图像
-
-    def DSP_A(self):
-
-        SPL = np.load('testSPL.npy')  # SPL data
-        maxSPL = ceil(np.max(SPL))
-        minSPL = floor(np.min(SPL))
-        print([maxSPL, minSPL])
-
-        count = 0
-        time1 = 0
-        time2 = 0
-        time3 = 0
-
-        self.ret, self.frame = self.cap.read()
-        image_height, image_width, image_depth = self.frame.shape
-        pic3 = np.array(np.zeros((image_height, image_width, 3)))
-        pic1 = np.array(np.zeros((81, 81)))
-        color1 = [0, 255, 200, 100, 50]
-        start = time.time_ns()
-
-        # self.frame = self.frame[:, 80:560, :]
-        end1 = time.time_ns()
-
-        pic1[np.where(SPL > maxSPL-1)] = color1[1]
-        pic1[np.where(SPL > maxSPL-2)
-             and np.where(SPL <= maxSPL-1)] = color1[2]
-        pic1[np.where(SPL > maxSPL-3)
-             and np.where(SPL <= maxSPL-2)] = color1[3]
-        pic1[np.where(SPL > maxSPL-4)
-             and np.where(SPL <= maxSPL-3)] = color1[4]
-        pic1[np.where(SPL <= maxSPL-4)] = color1[0]
-
-        # pic2=np.kron(pic1[0:80,0:80],np.ones((6,6)))
-        pic2 = cv2.resize(pic1, (image_width, image_height),
-                          interpolation=cv2.INTER_AREA)
-
-        end2 = time.time_ns()
-        pic3[:, :, 0] = pic2  # RGB通道
-
-        self.hit_img = cv2.add(uint8(pic3), uint8(self.frame))
-        end3 = time.time_ns()
-        cv2.imwrite("XMU2.jpg", self.hit_img)
-        # cv2.imshow("frame", self.hit_img)
 
     def testDAS(self, frame):
         self.frame = frame
@@ -201,10 +135,11 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
         return self.hit_img
 
     def beamforming_init(self):
-        self.z_source = 1  # 麦克风阵列平面与扫描屏幕的距离
-
+        self.z_source = 1  # 麦克风与扫描平面的距离(m)
+        self.scan_resolution = 0.05  # 扫描网格分辨率(m)
         # 麦克风阵列限定区域
         self.mic_r = 0.5  # 麦克风阵列限定区域半径
+
         self.mic_x = np.array([-self.mic_r, self.mic_r])
         self.mic_y = np.array([-self.mic_r, self.mic_r])
         # 扫描声源限定区域
@@ -212,14 +147,10 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.scan_x = np.array([-self.scan_r, self.scan_r])
         self.scan_y = np.array([-self.scan_r, self.scan_r])
         self.c = 343  # 声速
-        self.scan_resolution = 0.05  # 扫描网格的分辨率
-        # 确定扫描频段（800-4000 Hz）
-        self.search_freql = 800
-        self.search_frequ = 4000
-        # 设定信号持续时间
-        self.t_start = 0
-        self.t_end = 0.02  # 0.011609977324263039
-        self.framerate = 48000  # 44100
+
+        self.search_freql, self.search_frequ = 800, 4000  # 扫描频段（Hz）
+        self.t_start, self.t_end = 0, 0.02  # 信号持续时间(s)
+        self.framerate = 48000  # 麦克风采样率(Hz)
         # 导入麦克风阵列
         path_full = '修改代码/resources/6_spiral_array.mat'  # 须要读取的mat文件路径
         # path_full = '修改代码/resources/56_spiral_array.mat'
@@ -232,8 +163,8 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.search_freql, self.search_frequ, self.framerate, self.t_end)
         self.g = steerVector(self.z_source, self.freqs, [self.scan_x, self.scan_y],
                              self.scan_resolution, self.mic_pos.T, self.c, self.mic_centre)
-        time_steerVector_end = time.time()
-        print('steerVector cost', time_steerVector_end-time_steerVector_start)
+
+        print('steerVector cost', time.time()-time_steerVector_start)
 
     def beamforming(self):
         """DAS 波束成像算法（扫频模式）Delay Summation Algorithm"""
@@ -255,23 +186,23 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
         time_start = time.time()
         CSM = developCSM(mic_signal.T, self.search_freql,
                          self.search_frequ, self.framerate, self.t_start, self.t_end, self.N_freqs, self.freq_sels)  # micsignal.shape==6,512
-        time_end = time.time()
-        print('csm cost', time_end-time_start)
+
+        print('csm cost', time.time()-time_start)
 
         # 波束成像 -- DAS算法
         time_start = time.time()
         [X, Y, B] = DAS(CSM, self.g, self.freqs, [
                         self.scan_x, self.scan_y], self.scan_resolution)
-        time_end = time.time()
-        print('DAS cost', time_end-time_start)
+
+        print('DAS cost', time.time()-time_start)
 
         # % 声压级单位转换
         B[B < 0] = 0
         eps = np.finfo(np.float64).eps
         SPL = 20*np.log10((eps+np.sqrt(B.real))/2e-5)
-        time_end_total = time.time()
-        plot_figure(X, Y, SPL)
-        print('totally cost', time_end_total-time_start_total)
+
+        # plot_figure(X, Y, SPL)
+        print('totally cost', time.time()-time_start_total)
         return SPL
 
 

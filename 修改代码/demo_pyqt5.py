@@ -100,10 +100,6 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
         minSPL = floor(np.min(SPL))
         print([maxSPL, minSPL])
 
-        count = 0
-        time1 = 0
-        time2 = 0
-        time3 = 0
         image_height, image_width, image_depth = self.frame.shape
         pic3 = np.array(np.zeros((image_height, image_width, 3)))
         pic1_width = max(SPL.shape)
@@ -135,25 +131,23 @@ class mywindow(QtWidgets.QMainWindow, Ui_MainWindow):
         return self.hit_img
 
     def beamforming_init(self):
+        '''初始化算法参数'''
         self.z_source = 1  # 麦克风与扫描平面的距离(m)
         self.scan_resolution = 0.05  # 扫描网格分辨率(m)
-        # 麦克风阵列限定区域
-        self.mic_r = 0.5  # 麦克风阵列限定区域半径
-
-        self.mic_x = np.array([-self.mic_r, self.mic_r])
-        self.mic_y = np.array([-self.mic_r, self.mic_r])
-        # 扫描声源限定区域
-        self.scan_r = 1  # self.z_source / 2  # 扫描声源限定区域半径
-        self.scan_x = np.array([-self.scan_r, self.scan_r])
-        self.scan_y = np.array([-self.scan_r, self.scan_r])
-        self.c = 343  # 声速
-
+        self.mic_r = 0.5  # 麦克风阵列限定区域半径(m)
+        self.scan_r = 1  # 扫描平面半径(m)
         self.search_freql, self.search_frequ = 800, 4000  # 扫描频段（Hz）
+
+        self.c = 343  # 声速
         self.t_start, self.t_end = 0, 0.02  # 信号持续时间(s)
         self.framerate = 48000  # 麦克风采样率(Hz)
+        self.mic_x = np.array([-self.mic_r, self.mic_r])
+        self.mic_y = np.array([-self.mic_r, self.mic_r])
+        self.scan_x = np.array([-self.scan_r, self.scan_r])
+        self.scan_y = np.array([-self.scan_r, self.scan_r])
+
         # 导入麦克风阵列
-        path_full = '修改代码/resources/6_spiral_array.mat'  # 须要读取的mat文件路径
-        # path_full = '修改代码/resources/56_spiral_array.mat'
+        path_full = '修改代码/resources/6_spiral_array.mat'
         self.mic_pos, self.mic_centre, self.mic_x_axis, self.mic_y_axis = get_micArray(
             path_full)
         time_steerVector_start = time.time()
